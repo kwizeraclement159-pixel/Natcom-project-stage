@@ -1,55 +1,19 @@
-// const express=require("express");
-// const app=express();
-// const dotenv=require("dotenv");
-// dotenv.config();
-// const cors=require("cors");
-// const PORT=process.env.PORT;
-// const mysql=require("mysql2");
-// app.use(cors());
-// app.use(express.json());
-
-// const db=mysql.createConnection({
-//     host:process.env.DB_HOST,
-//     user:process.env.DB_USER,
-//     password:process.env.DB_PASSWORD,
-//     database:process.env.DB_NAME
-// });
-
-// db.connect((err)=>{                     
-//     if(err){
-//         console.log("Database connection failed:", err);
-//     }else{
-//         console.log(" Connected to MySQL database (user)");
-//     }   
-// }) ;
-
-// const name="kwizera";
-// app.post("/add",(req,res)=>{    
-// const {name}=req.body.name;
-// console.log(name);
-// })
-
-
-// app.get("/",(req,res) => {
-//     res.send("Welcome to the backend server!");
-// })
-
-
-// app.listen(PORT, ()=>{
-//     console.log(`Server is running on port ${PORT}`);
-// })
-
-
-
-
+//DECLARING VARIABLE HOLDING LIBRARIES
 
 const express=require("express");
 const cors=require("cors");
-const dotenv=require("dotenv")
-dotenv.config();
-const mysql=require("mysql2")
-const PORT=process.env.PORT
+
+
+const mysql=require("mysql2");
 const app=express();
+
+// CONFIGURING DOTENV LIBRARY
+const dotenv=require("dotenv");
+const PORT=3000;
+dotenv.config();
+
+//CONNECTION CREATION
+
 const db=mysql.createConnection({
     host:process.env.D_HOST,
     user:process.env.D_USER,
@@ -57,6 +21,7 @@ const db=mysql.createConnection({
     database:process.env.D_DB
 })
 
+//CONNECTION TESTING
 db.connect((err)=>{
     if(err){
         console.log("faile to connect");
@@ -65,43 +30,79 @@ db.connect((err)=>{
     }
 });
 
+//ALLOWING BACKEND TO USE CORS AND JSON FORMAT
 
 app.use(cors());
 app.use(express.json());
 
 
-
-
+//ADD/CREATE USER
 
 app.post("/add", ( req, res )=>{
     const {Name , Password} =req.body;
     const sql="INSERT INTO `users` VALUES ('',?,?)";
-    db.query(sql,[Name , Password ], (err) =>{
+    db.query(sql,[Name , Password ], (err,result) =>{
 
         if(err){
-            // console.log("failed to insert user");
-            throw err
+            console.log("failed to insert user");
+        
         }else{
             console.log("insert succeed");
+            res.json(result);
         }
     })
 }) ;
 
-app.get("/" , ( req ,res)=> {
-    const  {Name,Password}=req.body;
-    const {id}=req.params;
+//READ USERS
+app.get("/all" , ( req ,res)=> {
     const sql="SELECT * FROM users";
-    db.query(sql,[id,name,password],(err,result)=>{
+    db.query(sql,(err,result)=>{
      if(err){
         console.log("failed to fetch");
      }else{
         console.log(result);
+         res.json(result); 
      }
     });
 });
 
+//UPDATE USER
+app.put("/update/:id", (req, res) => {
+    const { name, password } = req.body;
+    const { id } = req.params;
+
+    const sql = "UPDATE users SET Name=?, Password=? WHERE id=?";
+
+    db.query(sql, [name, password, id], (err, result) => {
+        if (err) {
+            console.log("failed to update:", err);
+            res.status(500).json("failed");
+        } else {
+            console.log("updated:", id);
+            res.json(result);
+        }
+    });
+});
+//DELETE USER
+app.delete("/delete/:id", (req, res) => {
+    const { id } = req.params;
+    const sql = "DELETE FROM users WHERE id=?";
+
+    db.query(sql, [id], (err, result) => {
+        if (err) {
+            console.log("failed to delete:", err);
+            res.status(500).json("failed");
+        } else {
+            console.log("deleted:", id);
+            res.json(result);
+        }
+    });
+});
+
+
+//SERVER STARTING PORT
 app.listen(PORT,()=>{
     console.log(`server is running on port ${PORT}`);
 });
 
-
+//END OF PROGRMM BACKEND
